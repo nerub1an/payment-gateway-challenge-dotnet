@@ -18,9 +18,9 @@ public class PaymentsController(IPaymentsService paymentsService, IValidator<Pos
     {
         var payment = await paymentsService.GetPayment(id, cancellationToken);
 
-        return payment is null
-            ? new NotFoundResult()
-            : new OkObjectResult(payment.ToDto());
+        return payment?.Status == PaymentStatus.Authorized || payment?.Status == PaymentStatus.Declined
+            ? new OkObjectResult(payment.ToDto())
+            : new NotFoundResult();
     }
 
     [HttpPost]

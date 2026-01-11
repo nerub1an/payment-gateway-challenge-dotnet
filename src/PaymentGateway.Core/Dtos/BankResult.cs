@@ -1,6 +1,6 @@
 using PaymentGateway.Core.Domain.Enums;
 
-namespace PaymentGateway.Core.Domain;
+namespace PaymentGateway.Core.Dtos;
 
 public readonly record struct BankResult
 {

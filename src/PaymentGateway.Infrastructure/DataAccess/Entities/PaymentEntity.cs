@@ -16,4 +16,5 @@ public class PaymentEntity
 
     public required string MerchantCorrelationId { get; init; }
     public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }

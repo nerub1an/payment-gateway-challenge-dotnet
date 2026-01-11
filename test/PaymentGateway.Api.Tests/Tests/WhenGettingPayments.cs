@@ -21,8 +21,10 @@ public class WhenGettingPayments : IClassFixture<PaymentsApiWebApplicationFactor
         _httpClient = _fixture.CreateClient();
     }
 
-    [Fact]
-    public async Task AndPaymentExist_ThenReturns200OKWithPayment()
+    [Theory]
+    [InlineData(PaymentStatus.Authorized)]
+    [InlineData(PaymentStatus.Declined)]
+    public async Task AndPaymentExist_ThenReturns200OKWithPayment(PaymentStatus status)
     {
         // Arrange
         var repository = _fixture.GetService<IPaymentsRepository>();
@@ -37,7 +39,7 @@ public class WhenGettingPayments : IClassFixture<PaymentsApiWebApplicationFactor
             Currency = "GBP",
             MerchantCorrelationId = Guid.NewGuid().ToString(),
             BankCorrelationId = null,
-            Status = PaymentStatus.Initiated
+            Status = status
         };
 
         await repository.UpsertPayment(payment, CancellationToken.None);
@@ -51,8 +53,38 @@ public class WhenGettingPayments : IClassFixture<PaymentsApiWebApplicationFactor
         Assert.NotNull(paymentResponse);
     }
 
+    [Theory]
+    [InlineData(PaymentStatus.Initiated)]
+    [InlineData(PaymentStatus.Failed)]
+    public async Task AndPaymentExistButWithPrivateStatus_ThenReturns404NotFound(PaymentStatus status)
+    {
+        // Arrange
+        var repository = _fixture.GetService<IPaymentsRepository>();
+
+        var payment = new Payment
+        {
+            Id = Guid.NewGuid(),
+            ExpiryYear = _random.Next(2027, 2035),
+            ExpiryMonth = _random.Next(1, 12),
+            Amount = _random.Next(1, 10000),
+            CardNumber = Helper.GenerateCardNumber(),
+            Currency = "GBP",
+            MerchantCorrelationId = Guid.NewGuid().ToString(),
+            BankCorrelationId = null,
+            Status = status
+        };
+
+        await repository.UpsertPayment(payment, CancellationToken.None);
+
+        // Act
+        var response = await _httpClient.GetAsync($"{BasePath}/{payment.Id}");
+        
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     [Fact]
-    public async Task AndPaymentsNotFound_Returns404NotFound()
+    public async Task AndPaymentsNotFound_ThenReturns404NotFound()
     {
         // Act
         var response = await _httpClient.GetAsync($"{BasePath}/{Guid.NewGuid()}");

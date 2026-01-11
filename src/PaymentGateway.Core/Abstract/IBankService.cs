@@ -1,4 +1,5 @@
 using PaymentGateway.Core.Domain;
+using PaymentGateway.Core.Dtos;
 
 namespace PaymentGateway.Core.Abstract;
 

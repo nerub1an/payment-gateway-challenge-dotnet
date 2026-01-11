@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using PaymentGateway.Core.Abstract;
 using PaymentGateway.Core.Domain;
 using PaymentGateway.Core.Domain.Enums;
+using PaymentGateway.Core.Dtos;
 using PaymentGateway.Infrastructure.BankApi;
 
 namespace PaymentGateway.Infrastructure;

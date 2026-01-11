@@ -23,17 +23,14 @@ public class PaymentsService(
             return payment;
         }
 
-        // await paymentsRepository.UpsertPayment(payment, cancellationToken);
+        await paymentsRepository.UpsertPayment(payment, cancellationToken);
 
         var bankResult = await bankService.ProcessPayment(payment, cancellationToken);
 
         payment.Status = bankResult.PaymentStatus;
         payment.BankCorrelationId = bankResult.BankCorrelationId;
 
-        if (bankResult.PaymentStatus != PaymentStatus.Failed)
-        {
-            await paymentsRepository.UpsertPayment(payment, cancellationToken);
-        }
+        await paymentsRepository.UpsertPayment(payment, cancellationToken);
 
         return payment;
     }

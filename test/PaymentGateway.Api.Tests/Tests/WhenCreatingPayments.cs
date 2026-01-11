@@ -68,6 +68,11 @@ public class WhenCreatingPayments : IClassFixture<PaymentsApiWebApplicationFacto
 
         // Assert
         Assert.Equal(HttpStatusCode.FailedDependency, response.StatusCode);
+
+        var repository = _fixture.GetService<IPaymentsRepository>();
+        var explicitRepository = (PaymentsRepository)repository;
+        Assert.NotEmpty(explicitRepository.Payments);
+        Assert.Equal(PaymentStatus.Failed, explicitRepository.Payments.First().Value.Status);
     }
 
     [Fact]

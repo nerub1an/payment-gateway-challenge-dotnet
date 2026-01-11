@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using PaymentGateway.Core.Abstract;
 using PaymentGateway.Core.Domain;
+using PaymentGateway.Core.Domain.Enums;
 using PaymentGateway.Infrastructure.DataAccess.Entities;
 
 namespace PaymentGateway.Infrastructure.DataAccess;
@@ -13,7 +14,12 @@ public class PaymentsRepository(TimeProvider timeProvider) : IPaymentsRepository
     {
         var entity = payment.ToEntity();
 
-        entity.CreatedAt = timeProvider.GetUtcNow();
+        var now = timeProvider.GetUtcNow();
+        if (payment.Status == PaymentStatus.Initiated)
+        {
+            entity.CreatedAt = now;
+        }
+        entity.UpdatedAt = now;
 
         Payments[payment.Id] = entity;
 
