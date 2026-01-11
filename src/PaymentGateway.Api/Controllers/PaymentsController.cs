@@ -1,26 +1,54 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-using PaymentGateway.Api.Models.Responses;
-using PaymentGateway.Api.Services;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using PaymentGateway.Api.Contracts;
+using PaymentGateway.Api.Contracts.Requests;
+using PaymentGateway.Api.Contracts.Responses;
+using PaymentGateway.Core.Abstract;
+using PaymentGateway.Core.Domain.Enums;
 
 namespace PaymentGateway.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 [ApiController]
-public class PaymentsController : Controller
+public class PaymentsController(IPaymentsService paymentsService, IValidator<PostPaymentRequest> paymentsValidator)
+    : Controller
 {
-    private readonly PaymentsRepository _paymentsRepository;
-
-    public PaymentsController(PaymentsRepository paymentsRepository)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<PaymentResponse?>> GetPayment(Guid id, CancellationToken cancellationToken)
     {
-        _paymentsRepository = paymentsRepository;
+        var payment = await paymentsService.GetPayment(id, cancellationToken);
+
+        return payment is null
+            ? new NotFoundResult()
+            : new OkObjectResult(payment.ToDto());
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<PostPaymentResponse?>> GetPaymentAsync(Guid id)
+    [HttpPost]
+    public async Task<IActionResult> ProcessPayment(
+        PostPaymentRequest request, CancellationToken cancellationToken)
     {
-        var payment = _paymentsRepository.Get(id);
+        var validationResult = await paymentsValidator.ValidateAsync(request, cancellationToken);
 
-        return new OkObjectResult(payment);
+        var payment = request.ToDomain();
+
+        if (validationResult.IsValid)
+        {
+            payment = await paymentsService.ProcessPayment(payment, cancellationToken);
+        }
+        else
+        {
+            payment.Status = PaymentStatus.Rejected;
+        }
+
+        var response = payment.ToDto();
+
+        return payment.Status switch
+        {
+            PaymentStatus.Authorized => new CreatedResult(nameof(ProcessPayment), response),
+            PaymentStatus.Rejected => BadRequest(response),
+            PaymentStatus.Declined => Ok(response),
+            PaymentStatus.Failed => StatusCode(StatusCodes.Status424FailedDependency),
+            _ => StatusCode(StatusCodes.Status500InternalServerError) // TODO: not sure
+        };
     }
 }
