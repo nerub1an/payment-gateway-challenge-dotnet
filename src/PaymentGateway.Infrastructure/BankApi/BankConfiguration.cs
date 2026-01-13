@@ -1,4 +1,4 @@
-namespace PaymentGateway.Infrastructure.Configurations;
+namespace PaymentGateway.Infrastructure.BankApi;
 
 public record BankConfiguration
 {

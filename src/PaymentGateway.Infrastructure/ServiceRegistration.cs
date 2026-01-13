@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PaymentGateway.Core.Abstract;
 using PaymentGateway.Infrastructure.BankApi;
-using PaymentGateway.Infrastructure.Configurations;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
